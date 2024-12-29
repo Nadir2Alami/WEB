@@ -1,58 +1,23 @@
-# Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
-# Updated GitHub Actions workflow for Azure Web App PREPARCER
-
-name: Build and Deploy ASP.NET App to Azure Web App - PREPARCER
+name: Deploy Static Website to Azure Web App - PREPARCER
 
 on:
   push:
     branches:
-      - main  # Triggers workflow on push to main branch
-  workflow_dispatch:  # Allows manual triggering of the workflow
+      - main  # Déclenchement sur push dans la branche main
+  workflow_dispatch:  # Permet de déclencher manuellement le workflow
 
 jobs:
-  build:
-    runs-on: windows-latest  # Using a Windows runner for .NET
-
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4  # Checks out code from GitHub repository
-
-      - name: Setup MSBuild
-        uses: microsoft/setup-msbuild@v1.0.2  # Sets up MSBuild for building .NET projects
-
-      - name: Setup NuGet
-        uses: NuGet/setup-nuget@v1.0.5  # Sets up NuGet package manager
-
-      - name: Restore NuGet Packages
-        run: nuget restore
-
-      - name: Build and Publish App
-        run: msbuild /nologo /verbosity:m /t:Build /t:PipelinePreDeployCopyAllFilesToOneFolder /p:_PackageTempDir="published"
-
-      - name: Upload Build Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: ASP-app
-          path: published/**  # Uploads the built app for the deploy job
-
   deploy:
-    runs-on: windows-latest
-    needs: build  # Waits for the build job to complete
+    runs-on: ubuntu-latest
 
     steps:
-      - name: Download Build Artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: ASP-app  # Downloads the artifact uploaded by the build job
+    - name: Checkout Code
+      uses: actions/checkout@v4
 
-      - name: Login to Azure
-        uses: azure/login@v2
-        with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}  # Service Principal credentials stored as GitHub secret
-
-      - name: Deploy to Azure Web App
-        uses: Azure/webapps-deploy@v2
-        with:
-          app-name: 'PREPARCER'  # Your Azure Web App name
-          slot-name: 'Production'  # Your deployment slot
-          package: published  # Path to the folder containing the built app
+    - name: Deploy to Azure Web App
+      uses: Azure/webapps-deploy@v2
+      with:
+        app-name: 'PREPARCER'  # Nom de votre application sur Azure
+        slot-name: 'production'  # Slot par défaut
+        publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}  # Profil de publication Azure
+        package: .  # Déploie tous les fichiers du dépôt
